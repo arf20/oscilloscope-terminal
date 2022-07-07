@@ -7,7 +7,7 @@
 #define WWIDTH  1280
 #define WHEIGHT 720
 
-#define SCALE   10.0f
+#define SCALE   9.0f
 
 SDL_Window *window = nullptr;
 SDL_Renderer *renderer = nullptr;

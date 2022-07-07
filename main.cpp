@@ -103,7 +103,11 @@ int main() {
 
     std::fill(frameBuffer, frameBuffer + frameBufferSize, 0);
     auto str = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    auto str2 = "abcdefghijklmnopqrstuvwxyz";
+    auto str3 = "uwu";
     memcpy(frameBuffer, str, strlen(str));
+    memcpy(frameBuffer + (WIDTH), str2, strlen(str2));
+    memcpy(frameBuffer + (2 * WIDTH), str3, strlen(str3));
 
     render();
 
