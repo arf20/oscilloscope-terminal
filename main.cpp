@@ -1,27 +1,16 @@
-#include <iostream>
+#include "main.hpp"
+#include "font.hpp"
 
-#include "font.h"
+#include <iostream>
+#include <thread>
+#include <cstring>
 
 // Frame buffer
-#define WIDTH   80
-#define HEIGHT  25
-
-char *frameBuffer = new char[WIDTH * HEIGHT];
+constexpr int frameBufferSize = WIDTH * HEIGHT;
+char *frameBuffer = new char[frameBufferSize];
 
 // Sound
-#define FFREQ   50.0f      // Frame frequency 50Hz
-#define SRATE   192000  // Sound card sample rate
-
-constexpr float framePeriod = 1 / FFREQ;
-
-struct sample {
-    float x, y;
-};
-
-int frameWaveSize = int(framePeriod * float(SRATE)); // Samples
-sample *frameWave = new sample[frameWaveSize];
-
-
+point *frameWave = new point[frameWaveSize];
 
 // Functions
 
@@ -33,9 +22,18 @@ float sweepCharLength(char c) {
     return length;
 }
 
+float sweepFrameLength() {
+    float l = 0;
+    for (int i = 0; i < frameBufferSize; i++) {
+        l += sweepCharLength(frameBuffer[i]);
+    }
+    return l;
+}
+
 point sweepChar(float t, char c) {
     auto character = font[c];
 
+    // what segment i is at t
     float l = 0.0f;
     int i = -1;
     while (true) {
@@ -51,14 +49,17 @@ point sweepChar(float t, char c) {
     auto Ax = (character[i].b.x - character[i].a.x) / character[i].length();
     auto Ay = (character[i].b.y - character[i].a.y) / character[i].length();
 
+    auto x = (Ax * t2) + Bx;
+    auto y = (Ay * t2) + By;
+
     return {
         (Ax * t2) + Bx,
         (Ay * t2) + By
     };
 }
 
-void render(float T, float sampRate) {
-    for (int y = 0; y < HEIGHT; y++) {
+void render() {
+    /*for (int y = 0; y < HEIGHT; y++) {
         for (int x = 0; x < WIDTH; x++) {
             char c = frameBuffer[(y * WIDTH) + x];
             if (c == 0) continue;
@@ -68,12 +69,44 @@ void render(float T, float sampRate) {
 
 
         }
+    }*/
+
+    for (int i = 0; i < frameWaveSize; i++) {
+        float t = float(i) * (sweepFrameLength() / frameWaveSize);
+
+        // what character j is at t
+        float l = 0.0f;
+        int j = -1;
+        while (true) {
+            if (l > t) break;
+            l += sweepCharLength(frameBuffer[j + 1]);
+            j++;
+        }
+
+        float t2 = t - (l - sweepCharLength(frameBuffer[j]));
+
+        int y = j / WIDTH;
+        int x = j - (y * WIDTH);
+
+        frameWave[i] = sweepChar(t2, frameBuffer[j]);
+        frameWave[i].x += x * (FWIDTH + 1);
+        frameWave[i].y += y * (FHEIGHT + 1);
     }
 
 }
 
 int main() {
-    frameBuffer[5] = 'A';
-    auto p = sweepChar(4.5f, 'A');
-    std::cout << p.x << " " << p.y << std::endl;
+    // Scope emulator
+    if (!graphInit()) exit(1);
+    std::thread graphicThread(graphLoop);
+    graphicThread.detach();
+
+    std::fill(frameBuffer, frameBuffer + frameBufferSize, 0);
+    auto str = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    memcpy(frameBuffer, str, strlen(str));
+
+    render();
+
+    int ae;
+    std::cin >> ae;
 }
