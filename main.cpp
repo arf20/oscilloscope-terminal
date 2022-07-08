@@ -12,6 +12,9 @@ char *frameBuffer = new char[frameBufferSize];
 // Sound
 point *frameWave = new point[frameWaveSize];
 
+// precalc
+char *characterLengths = new char[128];
+
 // Functions
 
 float sweepCharLength(char c) {
@@ -25,7 +28,7 @@ float sweepCharLength(char c) {
 float sweepFrameLength() {
     float l = 0;
     for (int i = 0; i < frameBufferSize; i++) {
-        l += sweepCharLength(frameBuffer[i]);
+        l += characterLengths[frameBuffer[i]];
     }
     return l;
 }
@@ -49,9 +52,6 @@ point sweepChar(float t, char c) {
     auto Ax = (character[i].b.x - character[i].a.x) / character[i].length();
     auto Ay = (character[i].b.y - character[i].a.y) / character[i].length();
 
-    auto x = (Ax * t2) + Bx;
-    auto y = (Ay * t2) + By;
-
     return {
         (Ax * t2) + Bx,
         (Ay * t2) + By
@@ -59,19 +59,21 @@ point sweepChar(float t, char c) {
 }
 
 void render() {
+    float length = sweepFrameLength();
+
     for (int i = 0; i < frameWaveSize; i++) {
-        float t = float(i) * (sweepFrameLength() / frameWaveSize);
+        float t = float(i) * (length / frameWaveSize);
 
         // what character j is at t
         float l = 0.0f;
         int j = -1;
         while (true) {
             if (l > t) break;
-            l += sweepCharLength(frameBuffer[j + 1]);
+            l += characterLengths[frameBuffer[j + 1]];
             j++;
         }
 
-        float t2 = t - (l - sweepCharLength(frameBuffer[j]));
+        float t2 = t - (l - characterLengths[frameBuffer[j]]);
 
         int y = j / WIDTH;
         int x = j - (y * WIDTH);
@@ -84,6 +86,10 @@ void render() {
 }
 
 int main() {
+    // precalc
+    for (int i = 0; i < 128; i++)
+        characterLengths[i] = sweepCharLength(i);
+
     // Scope emulator
     if (!graphInit()) exit(1);
     std::thread graphicThread(graphLoop);

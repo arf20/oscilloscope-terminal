@@ -7,7 +7,7 @@
 #define WWIDTH  1280
 #define WHEIGHT 720
 
-#define SCALE   9.0f
+#define SCALE   3.0f
 
 SDL_Window *window = nullptr;
 SDL_Renderer *renderer = nullptr;
@@ -53,7 +53,7 @@ void graphLoop() {
         // Draw
         SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
 
-        for (int i = 0; i < lim - 1; i++) {
+        for (int i = 0; i < frameWaveSize - 1; i++) {
             //SDL_RenderDrawLine(renderer, SCALE * frameWave[i].x, SCALE * frameWave[i].y, SCALE * frameWave[i + 1].x, SCALE * frameWave[i + 1].y);
             SDL_RenderDrawPoint(renderer,  SCALE * frameWave[i].x, SCALE * frameWave[i].y);
         }

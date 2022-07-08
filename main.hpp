@@ -16,7 +16,7 @@ struct line {
 
 // Frame buffer
 #define WIDTH   80
-#define HEIGHT  25
+#define HEIGHT  24
 
 #define FWIDTH  4
 #define FHEIGHT 9
@@ -24,7 +24,7 @@ struct line {
 extern char *frameBuffer;
 
 // Sound
-#define FFREQ   50.0f      // Frame frequency 50Hz
+#define FFREQ   20.0f      // Frame frequency 50Hz
 #define SRATE   192000  // Sound card sample rate
 
 constexpr float framePeriod = 1 / FFREQ;
