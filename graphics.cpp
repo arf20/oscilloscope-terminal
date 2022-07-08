@@ -54,7 +54,8 @@ void graphLoop() {
         SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
 
         for (int i = 0; i < frameWaveSize - 1; i++) {
-            SDL_RenderDrawLine(renderer, SCALE * frameWave[i].x, SCALE * frameWave[i].y, SCALE * frameWave[i + 1].x, SCALE * frameWave[i + 1].y);
+            //SDL_RenderDrawLine(renderer, SCALE * frameWave[i].x, SCALE * frameWave[i].y, SCALE * frameWave[i + 1].x, SCALE * frameWave[i + 1].y);
+            SDL_RenderDrawPoint(renderer,  SCALE * frameWave[i].x, SCALE * frameWave[i].y);
         }
 
         lim += 100;

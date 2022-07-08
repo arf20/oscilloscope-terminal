@@ -102,12 +102,14 @@ int main() {
     graphicThread.detach();
 
     std::fill(frameBuffer, frameBuffer + frameBufferSize, 0);
-    auto str = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    auto str =  "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     auto str2 = "abcdefghijklmnopqrstuvwxyz";
-    auto str3 = "uwu";
+    auto str3 = " !\"#$%&'()*+,-./1234567890";
+    auto str4 = ":;<=>?@[\\]^_`{|}~";
     memcpy(frameBuffer, str, strlen(str));
     memcpy(frameBuffer + (WIDTH), str2, strlen(str2));
     memcpy(frameBuffer + (2 * WIDTH), str3, strlen(str3));
+    memcpy(frameBuffer + (3 * WIDTH), str4, strlen(str4));
 
     render();
 

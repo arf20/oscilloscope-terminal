@@ -19,7 +19,7 @@ struct line {
 #define HEIGHT  25
 
 #define FWIDTH  4
-#define FHEIGHT 7
+#define FHEIGHT 9
 
 extern char *frameBuffer;
 
