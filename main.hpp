@@ -32,6 +32,13 @@ constexpr float framePeriod = 1 / FFREQ;
 constexpr int frameWaveSize = int(framePeriod * float(SRATE)); // Samples
 extern point *frameWave;
 
+// Main
+void render();
+
+// Terminal
+void createTerminal();
+void runTerminal();
+
 // Graphics
 bool graphInit();
 void graphLoop();

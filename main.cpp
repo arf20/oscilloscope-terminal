@@ -59,18 +59,6 @@ point sweepChar(float t, char c) {
 }
 
 void render() {
-    /*for (int y = 0; y < HEIGHT; y++) {
-        for (int x = 0; x < WIDTH; x++) {
-            char c = frameBuffer[(y * WIDTH) + x];
-            if (c == 0) continue;
-
-            // sweep character
-            
-
-
-        }
-    }*/
-
     for (int i = 0; i < frameWaveSize; i++) {
         float t = float(i) * (sweepFrameLength() / frameWaveSize);
 
@@ -102,7 +90,7 @@ int main() {
     graphicThread.detach();
 
     std::fill(frameBuffer, frameBuffer + frameBufferSize, 0);
-    auto str =  "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    /*auto str =  "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     auto str2 = "abcdefghijklmnopqrstuvwxyz";
     auto str3 = " !\"#$%&'()*+,-./1234567890";
     auto str4 = ":;<=>?@[\\]^_`{|}~";
@@ -111,7 +99,10 @@ int main() {
     memcpy(frameBuffer + (2 * WIDTH), str3, strlen(str3));
     memcpy(frameBuffer + (3 * WIDTH), str4, strlen(str4));
 
-    render();
+    render();*/
+
+    createTerminal();
+    runTerminal();
 
     int ae;
     std::cin >> ae;
