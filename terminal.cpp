@@ -1,6 +1,7 @@
 #include "main.hpp"
 
 #include <iostream>
+#include <vector>
 
 #include <fcntl.h>
 #include <unistd.h>
@@ -144,14 +145,184 @@ int cursorY = 0;
 static bool esc = false;
 static bool csi = false;
 
+static std::vector<std::string> nstr;
+static int nidx = 0;
+
+void clearn() {
+    nstr.clear();
+    nidx = 0;
+}
+
+static std::string history = "";
+
 void writeFrameBuff(const char *buff, size_t n) {
     for (int i = 0; i < n; i++) {
         char c = buff[i];
+        history += c;
 
-        // Escape sequences
+        // CSI Escape sequences
         if (csi) {
-            if (c == 'K' && cursorX > 0) {  // remove last character of line
-                frameBuffer[(cursorY * WIDTH) + (cursorX - 1)] = 0;
+            if (!(c >= 48 && c <= 57)) {
+                if (c == ';') {
+                    nidx++;
+                    continue;
+                }
+
+                if (c == 'A') {  // move cursor up
+                    if (nstr.size() == 1) { 
+                        int n1 = std::stoi(nstr[0]);
+                        if (cursorY - n1 > -1)
+                            cursorY -= n1;
+                        else
+                            cursorY = 0;
+                    }
+                    else
+                        if (cursorY > 0)
+                            cursorY--;
+                        
+                    clearn();
+                    continue;
+                }
+                if (c == 'B') {  // move cursor down
+                    if (nstr.size() == 1) {
+                        int n1 = std::stoi(nstr[0]);
+                        if (cursorY + n1 < HEIGHT)
+                            cursorY += n1;
+                        else
+                            cursorY = HEIGHT - 1;
+                    }
+                    else
+                        if (cursorY < HEIGHT - 1)
+                            cursorY++;
+                        
+                    clearn();
+                    continue;
+                }
+                if (c == 'C') {  // move cursor forward
+                    if (nstr.size() == 1) {
+                        int n1 = std::stoi(nstr[0]); 
+                        if (cursorX + n1 < WIDTH)
+                            cursorX += n1;
+                        else
+                            cursorX = WIDTH - 1;
+                    }
+                    else
+                        if (cursorX < WIDTH - 1)
+                            cursorX++;
+                        
+                    clearn();
+                    continue;
+                }
+                if (c == 'D') {  // move cursor back
+                    if (nstr.size() == 1) {
+                        int n1 = std::stoi(nstr[0]);
+                        if (cursorX - n1 > -1)
+                            cursorX -= n1;
+                        else
+                            cursorX = 0;
+                    }
+                    else
+                        if (cursorX > 0)
+                            cursorX--;
+                        
+                    clearn();
+                    continue;
+                }
+
+                if (c == 'E') {  // move cursor to beggining of next line
+                    if (nstr.size() == 1) {
+                        int n1 = std::stoi(nstr[0]);
+                        if (cursorY + n1 < HEIGHT)
+                            cursorY += n1;
+                    }
+                    else
+                        if (cursorY < HEIGHT - 1)
+                            cursorY++;
+                        
+                    cursorX = 0;
+                    clearn();
+                    continue;
+                }
+                if (c == 'F') {  // move cursor to beggining of previous line
+                    if (nstr.size() == 1) {
+                        int n1 = std::stoi(nstr[0]);
+                        if (cursorY - n1 > -1)
+                            cursorY -= n1;
+                    }
+                    else
+                        if (cursorY > 0)
+                            cursorY--;
+                        
+                    cursorX = 0;
+                    clearn();
+                    continue;
+                }
+
+                if (c == 'G') {  // move cursor to absolute column
+                    if (nstr.size() == 1) {
+                        int n1 = std::stoi(nstr[0]);
+                        cursorX = n1 - 1;
+                    }
+                    if (nstr.size() == 0)
+                        cursorX = 0;
+                    
+                    clearn();
+                    continue;
+                }
+
+                if (c == 'H') {  // move cursor to absolute row and column
+                    if (nstr.size() == 2) {
+                        int n1 = 0;
+                        int n2 = 0;
+
+                        if (nstr[0].length() == 0)    // row
+                            n1 = 1;
+                        else
+                            int n1 = std::stoi(nstr[0]);
+
+                        if (nstr[1].length() == 0)    // column
+                            n2 = 1;
+                        else
+                            int n2 = std::stoi(nstr[1]);
+
+                        cursorY = n1 - 1;
+                        cursorX = n2 - 1;
+                    }
+                    if (nstr.size() == 1) {
+                        int n1 = std::stoi(nstr[0]);    // row
+                        cursorY = n1 - 1;
+                        cursorX = 0;
+                    }
+                    if (nstr.size() == 0) {
+                        cursorY = 0;
+                        cursorX = 0;
+                    }
+                    
+                    clearn();
+                    continue;
+                }
+
+                if (c == 'K') {  // remove part of the line
+                    int n1 = 0;
+                    if ((nstr.size() == 1 && (n1 = std::stoi(nstr[0])) == 0) || nstr.size() == 0)   // cursor to end
+                        for (int x = cursorX; x < WIDTH - 1; x++)
+                            frameBuffer[(cursorY * WIDTH) + x] = 0;
+                    if (nstr.size() == 1 && (n1 = std::stoi(nstr[0])) == 1)                         // cursor to beggining
+                        for (int x = cursorX; x >= 0; x--)
+                            frameBuffer[(cursorY * WIDTH) + x] = 0;
+                    if (nstr.size() == 1 && (n1 = std::stoi(nstr[0])) == 2)                         // entire line
+                        for (int x = 0; x < WIDTH - 1; x++)
+                            frameBuffer[(cursorY * WIDTH) + x] = 0;
+                    
+                    clearn();
+                    continue;
+                }
+            } else {
+                if (nidx > nstr.size() - 1)
+                    nstr.push_back(std::string(""));
+
+                nstr[nidx] += c;
+
                 continue;
             }
         }
@@ -159,26 +330,25 @@ void writeFrameBuff(const char *buff, size_t n) {
         csi = (esc && (c == '['));
         esc = (c == 27);
 
-        if (csi) {
+        if (csi)
             continue;   // prevent printing [ in ESC [
-        }
 
         // things that affect cursor
-        if (c == 8) {
+        if (c == 8) {   // backspace
             cursorX--;
         }
 
-        if (c == 9) {
+        if (c == 9) {   // tab
             int col = cursorX / 8;
             cursorX = (col + 1) * 8;
         }
 
-        if (c == '\n') {
+        if (c == '\n') {    // LF
             //cursorX = 0;
             cursorY++;
         }
 
-        if (c == '\r') {
+        if (c == '\r') {    // CR
             cursorX = 0;
         }
 
@@ -205,7 +375,7 @@ void writeFrameBuff(const char *buff, size_t n) {
             cursorY = HEIGHT - 1;
         }
 
-        // otherwise, print
+        // otherwise, print character
         if (c >= 32 && c <= 126) {
             frameBuffer[(cursorY * WIDTH) + cursorX] = c;
             cursorX++;
