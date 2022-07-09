@@ -6,18 +6,17 @@
 #include <cstring>
 
 // Frame buffer
-constexpr int frameBufferSize = WIDTH * HEIGHT;
 char *frameBuffer = new char[frameBufferSize];
 
 // Sound
 point *frameWave = new point[frameWaveSize];
 
 // precalc
-char *characterLengths = new char[128];
+static float *characterLengths = new float[256];
 
 // Functions
 
-float sweepCharLength(char c) {
+float sweepCharLength(unsigned char c) {
     auto character = font[c];
     float length = 0.0f;
     for (int i = 0; i < character.size(); i++)
@@ -33,14 +32,16 @@ float sweepFrameLength() {
     return l;
 }
 
-point sweepChar(float t, char c) {
+point sweepChar(float t, unsigned char c) {
     auto character = font[c];
+
+    if (character.size() == 0) return {0, 0};
 
     // what segment i is at t
     float l = 0.0f;
     int i = -1;
     while (true) {
-        if (l > t) break;
+        if (l > t || i + 1 > character.size() - 1) break;
         l += character[i + 1].length();
         i++;
     }
@@ -59,16 +60,19 @@ point sweepChar(float t, char c) {
 }
 
 void render() {
-    float length = sweepFrameLength();
+    float frameLength = sweepFrameLength();
 
-    for (int i = 0; i < frameWaveSize; i++) {
-        float t = float(i) * (length / frameWaveSize);
+    float unitsPerSample = (frameLength + characterLengths[219]) / frameWaveSize;
+    float samplesPerUnit = 1.0f / unitsPerSample;
+
+    for (int i = 0; i < frameWaveSize - (characterLengths[219] * samplesPerUnit); i++) {
+        float t = float(i) * unitsPerSample;
 
         // what character j is at t
         float l = 0.0f;
         int j = -1;
         while (true) {
-            if (l > t) break;
+            if (l > t || j + 1 > frameBufferSize - 1) break;
             l += characterLengths[frameBuffer[j + 1]];
             j++;
         }
@@ -77,17 +81,28 @@ void render() {
 
         int y = j / WIDTH;
         int x = j - (y * WIDTH);
-
+       
         frameWave[i] = sweepChar(t2, frameBuffer[j]);
+
         frameWave[i].x += x * (FWIDTH + 1);
         frameWave[i].y += y * (FHEIGHT + 1);
+    }
+
+    for (int i = frameWaveSize - (characterLengths[219] * samplesPerUnit); i < frameWaveSize; i++) {
+        float t = float(i) * unitsPerSample;
+        float t2 = t - frameLength;
+
+        frameWave[i] = sweepChar(t2, 219);
+
+        frameWave[i].x += cursorX * (FWIDTH + 1);
+        frameWave[i].y += cursorY * (FHEIGHT + 1);
     }
 
 }
 
 int main() {
     // precalc
-    for (int i = 0; i < 128; i++)
+    for (int i = 0; i < 256; i++)
         characterLengths[i] = sweepCharLength(i);
 
     // Scope emulator
@@ -96,19 +111,15 @@ int main() {
     graphicThread.detach();
 
     std::fill(frameBuffer, frameBuffer + frameBufferSize, 0);
-    /*auto str =  "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    auto str2 = "abcdefghijklmnopqrstuvwxyz";
-    auto str3 = " !\"#$%&'()*+,-./1234567890";
-    auto str4 = ":;<=>?@[\\]^_`{|}~";
-    memcpy(frameBuffer, str, strlen(str));
-    memcpy(frameBuffer + (WIDTH), str2, strlen(str2));
-    memcpy(frameBuffer + (2 * WIDTH), str3, strlen(str3));
-    memcpy(frameBuffer + (3 * WIDTH), str4, strlen(str4));
-
-    render();*/
 
     createTerminal();
-    runTerminal();
+
+    std::thread terminalThread(runTerminal);
+    terminalThread.detach();
+
+    while (true) {
+        render();
+    }
 
     int ae;
     std::cin >> ae;

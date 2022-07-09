@@ -9,10 +9,10 @@
 
 #define SCALE   3.0f
 
-SDL_Window *window = nullptr;
-SDL_Renderer *renderer = nullptr;
+static SDL_Window *window = nullptr;
+static SDL_Renderer *renderer = nullptr;
 
-SDL_bool done = SDL_FALSE;
+static SDL_bool done = SDL_FALSE;
 
 bool graphInit() {
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {

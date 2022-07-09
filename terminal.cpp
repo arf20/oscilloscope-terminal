@@ -13,8 +13,8 @@
 #include <poll.h>
 #include <termios.h>
 
-int masterfd = 0;
-int childpid = 0;
+static int masterfd = 0;
+static int childpid = 0;
 
 void sigchldHandler(int signum) {
     if (signum == SIGCHLD) {
@@ -141,23 +141,29 @@ void createTerminal() {
 int cursorX = 0;
 int cursorY = 0;
 
-bool esc = false;
-bool csi = false;
+static bool esc = false;
+static bool csi = false;
 
 void writeFrameBuff(const char *buff, size_t n) {
     for (int i = 0; i < n; i++) {
         char c = buff[i];
 
-        csi = (esc && (c == '['));
-        esc = (c == 127);
-
+        // Escape sequences
         if (csi) {
-            if (c == 'K' && cursorX > 0) {
+            if (c == 'K' && cursorX > 0) {  // remove last character of line
                 frameBuffer[(cursorY * WIDTH) + (cursorX - 1)] = 0;
                 continue;
             }
         }
 
+        csi = (esc && (c == '['));
+        esc = (c == 27);
+
+        if (csi) {
+            continue;   // prevent printing [ in ESC [
+        }
+
+        // things that affect cursor
         if (c == 8) {
             cursorX--;
         }
@@ -205,7 +211,7 @@ void writeFrameBuff(const char *buff, size_t n) {
             cursorX++;
         }
 
-        render();
+        //render();
     }
 }
 

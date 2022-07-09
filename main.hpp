@@ -21,7 +21,11 @@ struct line {
 #define FWIDTH  4
 #define FHEIGHT 9
 
+constexpr int frameBufferSize = WIDTH * HEIGHT;
 extern char *frameBuffer;
+
+extern int cursorX;
+extern int cursorY;
 
 // Sound
 #define FFREQ   20.0f      // Frame frequency 50Hz
