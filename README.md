@@ -15,5 +15,6 @@ ESC [ D
 ESC [ E
 ESC [ F
 ESC [ G
-
+ESC [ H
+ESC [ J
 ESC [ K
