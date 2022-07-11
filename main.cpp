@@ -105,8 +105,11 @@ int main() {
     for (int i = 0; i < 256; i++)
         characterLengths[i] = sweepCharLength(i);
 
+    // Audio stuff
+    initSDLAudio();
+
     // Scope emulator
-    if (!graphInit()) exit(1);
+    graphInit();
     std::thread graphicThread(graphLoop);
     graphicThread.detach();
 

@@ -3,7 +3,7 @@ project(oscilloscope-terminal)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -g")
 
-add_executable(oscilloscope-terminal terminal.cpp graphics.cpp main.cpp)
+add_executable(oscilloscope-terminal audio.cpp terminal.cpp graphics.cpp main.cpp)
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)

@@ -28,21 +28,26 @@ extern int cursorX;
 extern int cursorY;
 
 // Sound
-#define FFREQ   20.0f      // Frame frequency 50Hz
-#define SRATE   192000  // Sound card sample rate
+#define BLOCKSFRAME 4          // Frame frequency 50Hz
+#define BLOCK_SIZE  2048       // Block size
+#define SAMP_RATE   192000     // Sound card sample rate
 
-constexpr float framePeriod = 1 / FFREQ;
+constexpr float framePeriod = float(BLOCKSFRAME * BLOCK_SIZE) / float(SAMP_RATE);
+constexpr float frameFreq = 1.0f / framePeriod;
 
-constexpr int frameWaveSize = int(framePeriod * float(SRATE)); // Samples
+constexpr int frameWaveSize = int(framePeriod * float(SAMP_RATE)); // Samples
 extern point *frameWave;
 
 // Main
 void render();
+
+// Audio
+void initSDLAudio();
 
 // Terminal
 void createTerminal();
 void runTerminal();
 
 // Graphics
-bool graphInit();
+void graphInit();
 void graphLoop();

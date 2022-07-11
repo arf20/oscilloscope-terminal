@@ -14,9 +14,10 @@ static SDL_Renderer *renderer = nullptr;
 
 static SDL_bool done = SDL_FALSE;
 
-bool graphInit() {
+void graphInit() {
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-        std::cout << "Error initializing SDL2: " << SDL_GetError() << std::endl;
+        std::cout << "Error initializing SDL2 video: " << SDL_GetError() << std::endl;
+        exit(1);
     }
 
     // Create window
@@ -31,11 +32,10 @@ bool graphInit() {
 
     if (window == NULL) {
         std::cout << "Error opening window: " << SDL_GetError() << std::endl;
-        return false;
+        exit(1);
     }
 
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_SOFTWARE);
-    return true;
 }
 
 
