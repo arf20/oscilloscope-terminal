@@ -10,21 +10,18 @@ static int blockidx = 0;
 
 void SDLCALL audioCallback(void *userdata, Uint8 *stream, int len) {
 	for (int i = 0; i < frameWaveSize; i++) {
-		((sample*)stream)[(blockidx * BLOCK_SIZE) + (2 * i)] = 			(frameWave[i].x - ((FWIDTH + 1) * WIDTH) / 2.0f) * (INT32_MAX / ((FWIDTH + 1) * WIDTH));
-		((sample*)stream)[(blockidx * BLOCK_SIZE) + (2 * (i + 1)) ] = 	(frameWave[i].y - ((FHEIGHT + 1) * HEIGHT) / 2.0f) * (INT32_MAX / ((FHEIGHT + 1) * HEIGHT));
+		if (sizeof(sample) * ((2 * i) + 1) > len) {
+			//std::cout << i << " whoops " << ((2 * i) + 1) << std::endl;
+			break;
+		}
+		((sample*)stream)[2 * i] = 			(frameWave[(blockidx * BLOCK_SIZE) + i].x - ((FWIDTH + 1) * WIDTH) / 2.0f) * (INT32_MAX / ((FWIDTH + 1) * WIDTH));
+		((sample*)stream)[(2 * i) + 1] = 	-(frameWave[(blockidx * BLOCK_SIZE) + i].y - ((FHEIGHT + 1) * HEIGHT) / 2.0f) * (INT32_MAX / ((FHEIGHT + 1) * HEIGHT));
 	}
 	blockidx++;
 	if (blockidx >= BLOCKSFRAME) blockidx = 0;
 }
 
 void initSDLAudio() {
-    // Initialize SDL Audio Subsystem
-	int res = SDL_Init(SDL_INIT_AUDIO);
-	if (res < 0) {
-		std::cout << "Error initializing SDL2 audio: " << SDL_GetError() << std::endl;
-		exit(1);
-	}
-
     // Audio driver selection & init
 	int drivers = SDL_GetNumAudioDrivers();
 	std::cout << "Audio drivers [" << drivers << "]: " << std::endl;
@@ -34,8 +31,7 @@ void initSDLAudio() {
 	std::cout << "> ";
 	std::cin >> driveridx;
 
-    res = SDL_AudioInit(SDL_GetAudioDriver(driveridx));
-	if (res < 0) {
+	if (SDL_AudioInit(SDL_GetAudioDriver(driveridx)) < 0) {
 		std::cout << "Cannot initialize driver: " << SDL_GetError() << std::endl;
 		exit(1);
 	}
@@ -58,12 +54,20 @@ void initSDLAudio() {
 	format.callback = 	audioCallback;
     format.userdata = 	NULL;
 
+	SDL_AudioSpec obteinedFormat = { };
+
 	// Open
-	SDL_AudioDeviceID outputDevice = SDL_OpenAudioDevice(SDL_GetAudioDeviceName(outputDeviceIdx, SDL_FALSE), SDL_FALSE, &format, NULL, 0);
+	SDL_AudioDeviceID outputDevice = SDL_OpenAudioDevice(SDL_GetAudioDeviceName(outputDeviceIdx, SDL_FALSE), SDL_FALSE, &format, &obteinedFormat, 0);
 	if (outputDevice == 0) {
 		std::cout << "Cannot open output device: " << SDL_GetError() << std::endl;
 		exit(1);
 	}
+
+	std::cout << "Obtained format:" << std::endl;
+	std::cout << "\tSample format: " << obteinedFormat.format << std::endl;
+	std::cout << "\tChannels: " << int(obteinedFormat.channels) << std::endl;
+	std::cout << "\tSample rate: " << obteinedFormat.freq << std::endl;
+	std::cout << "\tBlock size: " << obteinedFormat.samples << std::endl;
 
 	// Start output
 	SDL_PauseAudioDevice(outputDevice, SDL_FALSE);

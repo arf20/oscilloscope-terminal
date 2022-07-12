@@ -15,11 +15,6 @@ static SDL_Renderer *renderer = nullptr;
 static SDL_bool done = SDL_FALSE;
 
 void graphInit() {
-    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-        std::cout << "Error initializing SDL2 video: " << SDL_GetError() << std::endl;
-        exit(1);
-    }
-
     // Create window
     window = SDL_CreateWindow(
         "scope emulator",                     // window title

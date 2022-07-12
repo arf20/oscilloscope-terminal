@@ -1,6 +1,8 @@
 #include "main.hpp"
 #include "font.hpp"
 
+#include <SDL2/SDL.h>
+
 #include <iostream>
 #include <thread>
 #include <cstring>
@@ -105,6 +107,12 @@ int main() {
     for (int i = 0; i < 256; i++)
         characterLengths[i] = sweepCharLength(i);
 
+    // Initialize SDL Audio Subsystem
+	if (SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO) < 0) {
+        std::cout << "Error initializing SDL2: " << SDL_GetError() << std::endl;
+        exit(1);
+    }
+
     // Audio stuff
     initSDLAudio();
 
@@ -123,7 +131,4 @@ int main() {
     while (true) {
         render();
     }
-
-    int ae;
-    std::cin >> ae;
 }
