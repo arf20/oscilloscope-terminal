@@ -1,6 +1,9 @@
 # oscilloscope-terminal
 Turns your oscilloscope (through a sound card) into a Linux terminal emulator
 
+![20220718_105600](https://user-images.githubusercontent.com/35542215/219949994-d2461e87-b467-4c5a-9423-d1cf8d5ba853.jpg)
+Running neofetch in debian. Terrible sound card and terrible camera, sorry
+
 ## Hardware requirements
 To be able to see your terminal using real hardware, you need:
  - any old two channel analog oscilloscope capable of doing XY mode
