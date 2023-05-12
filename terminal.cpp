@@ -18,19 +18,23 @@ static int masterfd = 0;
 static int childpid = 0;
 static termios ogterm {};
 
+void restoreTerminal();
+
 void sigchldHandler(int signum) {
     if (signum == SIGCHLD) {
         int result = 0;
         waitpid(childpid, &result, WNOHANG);
 
         if (WIFEXITED(result)) {
-            std::cout << "Error: SIGCHLD shell process exited" << std::endl;
+            restoreTerminal();
+            std::cout << "\r" << std::flush << "Error: SIGCHLD shell process exited" << std::endl;
 
             // Reset canonical mode for parent process stdin
             /*termios termios_p {};
             termios_p.c_lflag = termios_p.c_lflag & ICANON;
             tcsetattr(0, TCSANOW, &termios_p);*/
-            system("reset");
+            // system("reset");
+            restoreTerminal();
             exit(1);
         }
     }
