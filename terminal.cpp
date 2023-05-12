@@ -42,7 +42,8 @@ void saveTerminal() {
 }
 
 void restoreTerminal() { 
-    // Restore original terminal settings
+    // Restore original terminal settings. Also manually set ONLCR.
+    ogterm.c_oflag |= ONLCR;
     tcsetattr(STDIN_FILENO, TCSANOW, &ogterm);
 }
 
