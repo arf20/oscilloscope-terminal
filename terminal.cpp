@@ -16,6 +16,7 @@
 
 static int masterfd = 0;
 static int childpid = 0;
+static termios ogterm {};
 
 void sigchldHandler(int signum) {
     if (signum == SIGCHLD) {
@@ -35,12 +36,22 @@ void sigchldHandler(int signum) {
     }
 }
 
+void restoreTerminal() { 
+    tcsetattr(STDIN_FILENO, TCSANOW, &ogterm);
+}
+
 void createTerminal() {
+    // Fetch original terminal settings
+    tcgetattr(STDIN_FILENO, &ogterm);
+
     // Set non-canonical mode for parent process stdin
     termios termios_p {};
     termios_p.c_lflag = termios_p.c_lflag & ~(ICANON);
     termios_p.c_cc[VTIME] = 1;
-    tcsetattr(0, TCSANOW, &termios_p);
+    tcsetattr(STDIN_FILENO, TCSANOW, &termios_p);
+
+    // Restore terminal upon program exit. 
+    atexit(restoreTerminal);
 
     // Create PTM PTS pair
     // Create PTM from PTMX
