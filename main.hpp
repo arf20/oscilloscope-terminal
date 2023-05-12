@@ -50,5 +50,4 @@ void createTerminal();
 void runTerminal();
 
 // Graphics
-void graphInit();
 void graphLoop();
