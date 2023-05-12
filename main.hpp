@@ -45,9 +45,11 @@ void render();
 void initSDLAudio();
 
 // Terminal
+extern bool terminalrunning;
 void saveTerminal();
 void createTerminal();
 void pushKey(char v);
+void closeTerminal();
 void runTerminal();
 
 // Graphics

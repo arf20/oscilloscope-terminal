@@ -69,6 +69,7 @@ void graphLoop() {
             switch (event.type) {
                 case SDL_QUIT: {
                     done = SDL_TRUE;
+                    closeTerminal();
                 } break;
                 case SDL_KEYDOWN: {
                     pushKey(event.key.keysym.sym);

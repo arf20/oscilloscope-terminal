@@ -130,7 +130,7 @@ int main() {
     std::thread terminalThread(runTerminal);
     terminalThread.detach();
 
-    while (true) {
+    while (terminalrunning) {
         render();
     }
 }

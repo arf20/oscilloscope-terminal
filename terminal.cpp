@@ -17,6 +17,7 @@
 static int masterfd = 0;
 static int childpid = 0;
 static termios ogterm {};
+bool terminalrunning = true;
 
 void saveTerminal() {
     // Fetch original terminal settings
@@ -157,6 +158,11 @@ void createTerminal() {
 
 void pushKey(char v) {
     write(masterfd, &v, 1);
+}
+
+void closeTerminal() {
+    kill(childpid, SIGHUP);
+    terminalrunning = false;
 }
 
 
@@ -481,8 +487,8 @@ void runTerminal() {
     pfds[1].fd = 0;
     pfds[1].events = POLLIN;
 
-    while (true) {
-        if (poll(pfds, nfds, 2000) < 0) {
+    while (terminalrunning) {
+        if (poll(pfds, nfds, 100) < 0) {
             std::cout << "poll failed with " << strerror(errno) << std::endl;
             exit(1);
         }
