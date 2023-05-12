@@ -36,14 +36,17 @@ void sigchldHandler(int signum) {
     }
 }
 
+void saveTerminal() {
+    // Fetch original terminal settings
+    tcgetattr(STDIN_FILENO, &ogterm);
+}
+
 void restoreTerminal() { 
+    // Restore original terminal settings
     tcsetattr(STDIN_FILENO, TCSANOW, &ogterm);
 }
 
 void createTerminal() {
-    // Fetch original terminal settings
-    tcgetattr(STDIN_FILENO, &ogterm);
-
     // Set non-canonical mode for parent process stdin
     termios termios_p {};
     termios_p.c_lflag = termios_p.c_lflag & ~(ICANON);

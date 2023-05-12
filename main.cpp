@@ -103,6 +103,9 @@ void render() {
 }
 
 int main() {
+    // save initial terminal state first and foremost
+    saveTerminal();
+
     // precalc
     for (int i = 0; i < 256; i++)
         characterLengths[i] = sweepCharLength(i);
