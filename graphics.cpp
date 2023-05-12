@@ -66,8 +66,13 @@ void graphLoop() {
         
 
         while (SDL_PollEvent(&event)) {
-            if (event.type == SDL_QUIT) {
-                done = SDL_TRUE;
+            switch (event.type) {
+                case SDL_QUIT: {
+                    done = SDL_TRUE;
+                } break;
+                case SDL_KEYDOWN: {
+                    pushKey(event.key.keysym.sym);
+                } break;
             }
         }
     }

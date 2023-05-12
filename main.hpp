@@ -47,6 +47,7 @@ void initSDLAudio();
 // Terminal
 void saveTerminal();
 void createTerminal();
+void pushKey(char v);
 void runTerminal();
 
 // Graphics

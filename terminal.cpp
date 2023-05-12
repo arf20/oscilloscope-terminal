@@ -18,7 +18,16 @@ static int masterfd = 0;
 static int childpid = 0;
 static termios ogterm {};
 
-void restoreTerminal();
+void saveTerminal() {
+    // Fetch original terminal settings
+    tcgetattr(STDIN_FILENO, &ogterm);
+}
+
+void restoreTerminal() { 
+    // Restore original terminal settings. Also manually set ONLCR.
+    ogterm.c_oflag |= ONLCR;
+    tcsetattr(STDIN_FILENO, TCSANOW, &ogterm);
+}
 
 void sigchldHandler(int signum) {
     if (signum == SIGCHLD) {
@@ -37,17 +46,6 @@ void sigchldHandler(int signum) {
             exit(1);
         }
     }
-}
-
-void saveTerminal() {
-    // Fetch original terminal settings
-    tcgetattr(STDIN_FILENO, &ogterm);
-}
-
-void restoreTerminal() { 
-    // Restore original terminal settings. Also manually set ONLCR.
-    ogterm.c_oflag |= ONLCR;
-    tcsetattr(STDIN_FILENO, TCSANOW, &ogterm);
 }
 
 void createTerminal() {
@@ -100,7 +98,7 @@ void createTerminal() {
         }
 
         // Open PTS for shell process
-        int slavefd = 0;
+        static int slavefd = 0;
         if ((slavefd = open(slavedev, O_RDWR)) < 0) {
             std::cout << "open failed with " << strerror(errno) << std::endl;
             exit(1);
@@ -156,6 +154,11 @@ void createTerminal() {
         exit(0);
     }
 }
+
+void pushKey(char v) {
+    write(masterfd, &v, 1);
+}
+
 
 int cursorX = 0;
 int cursorY = 0;
