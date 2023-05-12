@@ -34,7 +34,6 @@ void sigchldHandler(int signum) {
             termios_p.c_lflag = termios_p.c_lflag & ICANON;
             tcsetattr(0, TCSANOW, &termios_p);*/
             // system("reset");
-            restoreTerminal();
             exit(1);
         }
     }
