@@ -76,6 +76,8 @@ void graphLoop() {
                 } break;
             }
         }
+
+        SDL_Delay(COMPUTE_DELAY);
     }
 
     if (renderer) SDL_DestroyRenderer(renderer);

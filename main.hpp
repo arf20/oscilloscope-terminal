@@ -14,6 +14,8 @@ struct line {
     }
 };
 
+#define COMPUTE_DELAY   17
+
 // Frame buffer
 #define WIDTH   80
 #define HEIGHT  24

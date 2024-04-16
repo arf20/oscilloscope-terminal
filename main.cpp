@@ -6,6 +6,7 @@
 #include <iostream>
 #include <thread>
 #include <cstring>
+#include <chrono>
 
 // Frame buffer
 char *frameBuffer = new char[frameBufferSize];
@@ -132,5 +133,6 @@ int main() {
 
     while (terminalrunning) {
         render();
+        std::this_thread::sleep_for(std::chrono::milliseconds(COMPUTE_DELAY));
     }
 }
