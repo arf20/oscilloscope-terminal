@@ -173,247 +173,190 @@ static bool esc = false;
 static bool csi = false;
 static bool osc = false;
 
-static std::vector<std::string> argstr;
-static int argidx = 0;
+static std::string csiparams, csiinter;
 
 void clearargs() {
-    argstr.clear();
-    argidx = 0;
+    csiparams.clear();
+    csiinter.clear();
 }
-
-static std::string history = "";
 
 void writeFrameBuff(const char *buff, size_t n) {
     for (int i = 0; i < n; i++) {
         char c = buff[i];
-        history += c;
 
-        // CSI Escape sequences
+        // CSI (ESC [) Escape sequences
         if (csi) {
-            if (!(c >= 48 && c <= 57)) {
-                if (c == ';') {
-                    argidx++;
-                    continue;
-                }
+            if (c >= 0x30 && c <= 0x3f) {
+                csiparams += c;
+                continue;
+            }
+            if (c >= 0x20 && c <= 0x2f) {
+                csiinter += c;
+                continue;
+            }
+            else if (c >= 0x40 && c <= 0x7e) {
+                // if final byte 
 
                 if (c == 'A') {  // move cursor up
-                    if (argstr.size() == 1) { 
-                        int n1 = std::stoi(argstr[0]);
-                        if (cursorY - n1 > -1)
-                            cursorY -= n1;
+                    if (csiparams.length() > 0) { 
+                        int n = std::stoi(csiparams);
+                        if (cursorY - n > -1)
+                            cursorY -= n;
                         else
                             cursorY = 0;
                     }
                     else
                         if (cursorY > 0)
                             cursorY--;
-                        
-                    clearargs();
-                    continue;
                 }
                 if (c == 'B') {  // move cursor down
-                    if (argstr.size() == 1) {
-                        int n1 = std::stoi(argstr[0]);
-                        if (cursorY + n1 < HEIGHT)
-                            cursorY += n1;
+                    if (csiparams.length() > 0) {
+                        int n = std::stoi(csiparams);
+                        if (cursorY + n < HEIGHT)
+                            cursorY += n;
                         else
                             cursorY = HEIGHT - 1;
                     }
                     else
                         if (cursorY < HEIGHT - 1)
                             cursorY++;
-                        
-                    clearargs();
-                    continue;
                 }
                 if (c == 'C') {  // move cursor forward
-                    if (argstr.size() == 1) {
-                        int n1 = std::stoi(argstr[0]); 
-                        if (cursorX + n1 < WIDTH)
-                            cursorX += n1;
+                    if (csiparams.length() > 0) {
+                        int n = std::stoi(csiparams); 
+                        if (cursorX + n < WIDTH)
+                            cursorX += n;
                         else
                             cursorX = WIDTH - 1;
                     }
                     else
                         if (cursorX < WIDTH - 1)
                             cursorX++;
-                        
-                    clearargs();
-                    continue;
                 }
                 if (c == 'D') {  // move cursor back
-                    if (argstr.size() == 1) {
-                        int n1 = std::stoi(argstr[0]);
-                        if (cursorX - n1 > -1)
-                            cursorX -= n1;
+                    if (csiparams.length() > 0) {
+                        int n = std::stoi(csiparams);
+                        if (cursorX - n > -1)
+                            cursorX -= n;
                         else
                             cursorX = 0;
                     }
                     else
                         if (cursorX > 0)
                             cursorX--;
-                        
-                    clearargs();
-                    continue;
                 }
 
                 if (c == 'E') {  // move cursor to beggining of next line
-                    if (argstr.size() == 1) {
-                        int n1 = std::stoi(argstr[0]);
-                        if (cursorY + n1 < HEIGHT)
-                            cursorY += n1;
+                    if (csiparams.length() > 0) {
+                        int n = std::stoi(csiparams);
+                        if (cursorY + n < HEIGHT)
+                            cursorY += n;
                     }
                     else
                         if (cursorY < HEIGHT - 1)
                             cursorY++;
                         
                     cursorX = 0;
-                    clearargs();
-                    continue;
                 }
                 if (c == 'F') {  // move cursor to beggining of previous line
-                    if (argstr.size() == 1) {
-                        int n1 = std::stoi(argstr[0]);
-                        if (cursorY - n1 > -1)
-                            cursorY -= n1;
+                    if (csiparams.length() > 0) {
+                        int n = std::stoi(csiparams);
+                        if (cursorY - n > -1)
+                            cursorY -= n;
                     }
                     else
                         if (cursorY > 0)
                             cursorY--;
                         
                     cursorX = 0;
-                    clearargs();
-                    continue;
                 }
 
                 if (c == 'G') {  // move cursor to absolute column
-                    if (argstr.size() == 1) {
-                        int n1 = std::stoi(argstr[0]);
-                        cursorX = n1 - 1;
+                    if (csiparams.length() > 0) {
+                        int n = std::stoi(csiparams);
+                        cursorX = n - 1;
                     }
-                    if (argstr.size() == 0)
+                    else
                         cursorX = 0;
-                    
-                    clearargs();
-                    continue;
                 }
 
                 if (c == 'H') {  // move cursor to absolute row and column
-                    if (argstr.size() == 2) {
-                        int n1 = 0;
-                        int n2 = 0;
-
-                        if (argstr[0].length() == 0)    // row
-                            n1 = 1;
-                        else
-                            int n1 = std::stoi(argstr[0]);
-
-                        if (argstr[1].length() == 0)    // column
-                            n2 = 1;
-                        else
-                            int n2 = std::stoi(argstr[1]);
-
-                        cursorY = n1 - 1;
-                        cursorX = n2 - 1;
+                    if (csiparams.length() > 0) {
+                        size_t sci = csiparams.find(";");
+                        cursorY = std::stoi(csiparams.substr(0, sci)) - 1;
+                        cursorX = std::stoi(csiparams.substr(sci + 1)) - 1;
+                    } else {
+                        cursorY = cursorX = 0;
                     }
-                    if (argstr.size() == 1) {
-                        int n1 = std::stoi(argstr[0]);    // row
-                        cursorY = n1 - 1;
-                        cursorX = 0;
-                    }
-                    if (argstr.size() == 0) {
-                        cursorY = 0;
-                        cursorX = 0;
-                    }
-                    
-                    clearargs();
-                    continue;
                 }
 
                 if (c == 'J') {     // clear part of the screen
-                    int n1 = 0;
-                    if ((argstr.size() == 1 && (n1 = std::stoi(argstr[0])) == 0) || argstr.size() == 0)   // cursor to end of screen
+                    if (csiparams.length() > 0) {
+                        switch (std::stoi(csiparams)) {
+                            case 0: {
+                                // cursor to end
+                                for (int j = (cursorY * WIDTH) + cursorX; j < WIDTH * HEIGHT; j++)
+                                    frameBuffer[j] = 0;
+                            } break;
+                            case 1: {
+                                // cursor to beggining
+                                for (int j = (cursorY * WIDTH) + cursorX; j >= 0; j--)
+                                    frameBuffer[j] = 0;
+                            } break;
+                            case 2: {
+                                // entire
+                                for (int j = 0; j < WIDTH * HEIGHT; j++)
+                                    frameBuffer[j] = 0;
+                            }
+                            case 3: {
+                                // entire and scrollback (no scrollback)
+                                for (int j = 0; j < WIDTH * HEIGHT; j++)
+                                    frameBuffer[j] = 0;
+                            }
+                        }
+                    } else {
+                        // cursor to end
                         for (int j = (cursorY * WIDTH) + cursorX; j < WIDTH * HEIGHT; j++)
                             frameBuffer[j] = 0;
-                    if (argstr.size() == 1 && (n1 = std::stoi(argstr[0])) == 1)                         // cursor to beggining
-                        for (int j = (cursorY * WIDTH) + cursorX; j >= 0; j--)
-                            frameBuffer[j] = 0;
-                    if (argstr.size() == 1 && (n1 = std::stoi(argstr[0])) == 2)                         // entire screen
-                        for (int j = 0; j < WIDTH * HEIGHT; j++)
-                            frameBuffer[j] = 0;
-                    if (argstr.size() == 1 && (n1 = std::stoi(argstr[0])) == 3)                         // entire screen and scrollback buffer
-                        for (int j = 0; j < WIDTH * HEIGHT; j++)
-                            frameBuffer[j] = 0;
+                    }
                 }
 
                 if (c == 'K') {  // clear part of the line
-                    int n1 = 0;
-                    if ((argstr.size() == 1 && (n1 = std::stoi(argstr[0])) == 0) || argstr.size() == 0)   // cursor to end
+                    if (csiparams.length() > 0) {
+                        switch (std::stoi(csiparams)) {
+                            case 0: {
+                                // cursor to end
+                                for (int x = cursorX; x < WIDTH - 1; x++)
+                                    frameBuffer[(cursorY * WIDTH) + x] = 0;
+                            } break;
+                            case 1: {
+                                // cursor to beggining
+                                for (int x = cursorX; x >= 0; x--)
+                                    frameBuffer[(cursorY * WIDTH) + x] = 0;
+                            } break;
+                            case 2: {
+                                // entire
+                                for (int x = 0; x < WIDTH - 1; x++)
+                                    frameBuffer[(cursorY * WIDTH) + x] = 0;
+                            }
+                        }
+                    } else {
+                        // cursor to end
                         for (int x = cursorX; x < WIDTH - 1; x++)
                             frameBuffer[(cursorY * WIDTH) + x] = 0;
-                    if (argstr.size() == 1 && (n1 = std::stoi(argstr[0])) == 1)                         // cursor to beggining
-                        for (int x = cursorX; x >= 0; x--)
-                            frameBuffer[(cursorY * WIDTH) + x] = 0;
-                    if (argstr.size() == 1 && (n1 = std::stoi(argstr[0])) == 2)                         // entire line
-                        for (int x = 0; x < WIDTH - 1; x++)
-                            frameBuffer[(cursorY * WIDTH) + x] = 0;
-                    
-                    clearargs();
-                    continue;
+                    }
                 }
 
-                if (c == 'S') {     // scroll up whole page
-                    clearargs();
-                    continue;
-                }
-
-                if (c == 'T') {     // scroll down whole page
-                    clearargs();
-                    continue;
-                }
-
-                if (c == 'f') {     // i have no clue what it does, ANSI wiki is not very clear
-                    clearargs();
-                    continue;
-                }
-
-                if (c == 'm') {     // Select Graphic Rendition: completely unsupported
-                    clearargs();
-                    continue;
-                }
-            } else {
-                if (argidx > (int(argstr.size()) - 1))
-                    argstr.push_back(std::string(""));
-
-                argstr[argidx] += c;
-
-                continue;
-            }
-        }
-
-        if (osc) {                  // Operating System Command: completely unsupported
-            if (c == 7 || c == 27) {
-                osc = false;
+                csi = false;
                 clearargs();
-                continue;
-            }
-            else {
-                if (c == ';') {
-                    argidx++;
-                    continue;
-                }
-
-                if (argidx > (int(argstr.size()) - 1))
-                    argstr.push_back(std::string(""));
-
-                argstr[argidx] += c;
-
-                continue;
+                continue; // don't print final char
             }
         }
 
-        csi = (esc && (c == '['));
-        osc = (esc && (c == ']'));
+        if (!csi)
+            csi = (esc && (c == '['));
+        if (!osc)
+            osc = (esc && (c == ']'));
         esc = (c == 27);
 
         if (csi || osc)
